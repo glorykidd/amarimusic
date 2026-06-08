@@ -1,0 +1,111 @@
+@page "/admin"
+@page "/admin/dashboard"
+@layout AdminLayout
+@attribute [Authorize]
+@using AmariMusic.Data
+@using Microsoft.EntityFrameworkCore
+@inject ContactDbContext Db
+
+<PageTitle>Dashboard | Admin</PageTitle>
+
+<h1 class="fs-2 fw-bold mb-4">Dashboard</h1>
+
+<div class="row g-4 mb-5">
+    <div class="col-md-4">
+        <div class="admin-stat-card card shadow-sm rounded-4 border-0 h-100">
+            <div class="card-body p-4 text-center">
+                <div class="stat-icon text-warning mb-2"><i class="bi bi-envelope-exclamation fs-1"></i></div>
+                <div class="display-4 fw-bold text-warning">@_newSubmissions</div>
+                <div class="text-muted mt-1">New Inquiries</div>
+                <a href="/admin/contacts" class="btn btn-outline-warning btn-sm mt-3">View All</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="admin-stat-card card shadow-sm rounded-4 border-0 h-100">
+            <div class="card-body p-4 text-center">
+                <div class="stat-icon text-primary mb-2"><i class="bi bi-envelope fs-1"></i></div>
+                <div class="display-4 fw-bold text-primary">@_totalSubmissions</div>
+                <div class="text-muted mt-1">Total Inquiries</div>
+                <a href="/admin/contacts" class="btn btn-outline-primary btn-sm mt-3">View All</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="admin-stat-card card shadow-sm rounded-4 border-0 h-100">
+            <div class="card-body p-4 text-center">
+                <div class="stat-icon text-success mb-2"><i class="bi bi-clock-history fs-1"></i></div>
+                <div class="fs-5 fw-bold text-success mt-3">
+                    @(_latestSubmission.HasValue ? _latestSubmission.Value.ToLocalTime().ToString("MMM d, yyyy") : "—")
+                </div>
+                <div class="text-muted mt-1">Latest Inquiry</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (_recentSubmissions.Count > 0)
+{
+    <h2 class="fs-4 fw-bold mb-3">Recent Inquiries</h2>
+    <div class="card shadow-sm rounded-4 border-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Date</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var s in _recentSubmissions)
+                    {
+                        <tr class="@(s.ViewedAt is null ? "table-warning" : "")">
+                            <td class="text-nowrap">@s.SubmittedAt.ToLocalTime().ToString("MMM d, h:mm tt")</td>
+                            <td>@s.Name</td>
+                            <td>@s.Email</td>
+                            <td>
+                                @if (s.ViewedAt is null)
+                                {
+                                    <span class="badge bg-warning text-dark">New</span>
+                                }
+                                else if (s.RepliedAt is not null)
+                                {
+                                    <span class="badge bg-success">Replied</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Viewed</span>
+                                }
+                            </td>
+                            <td><a href="/admin/contacts/@s.Id" class="btn btn-sm btn-outline-primary">View</a></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+@code {
+    private int _totalSubmissions;
+    private int _newSubmissions;
+    private DateTime? _latestSubmission;
+    private List<AmariMusic.Models.ContactSubmission> _recentSubmissions = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        _totalSubmissions = await Db.ContactSubmissions.CountAsync();
+        _newSubmissions = await Db.ContactSubmissions.CountAsync(s => s.ViewedAt == null);
+        _latestSubmission = await Db.ContactSubmissions
+            .OrderByDescending(s => s.SubmittedAt)
+            .Select(s => (DateTime?)s.SubmittedAt)
+            .FirstOrDefaultAsync();
+        _recentSubmissions = await Db.ContactSubmissions
+            .OrderByDescending(s => s.SubmittedAt)
+            .Take(5)
+            .ToListAsync();
+    }
+}

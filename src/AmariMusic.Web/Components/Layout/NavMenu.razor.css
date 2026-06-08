@@ -1,0 +1,31 @@
+.site-navbar {
+    background-color: #1a1a2e;
+    border-bottom: 2px solid #6495ed;
+}
+
+.site-navbar .nav-link {
+    color: #a8c0ff !important;
+    font-weight: 500;
+    transition: color 0.2s;
+    padding: 0.4rem 0.75rem;
+}
+
+.site-navbar .nav-link:hover,
+.site-navbar .nav-link.active {
+    color: #e9f013 !important;
+}
+
+/* On md+ screens: make the navbar a positioning context so we can
+   absolutely center the nav links across the full bar width */
+@@media (min-width: 768px) {
+    .site-navbar .container {
+        position: relative;
+    }
+
+    .site-navbar .navbar-collapse {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        width: auto;
+    }
+}

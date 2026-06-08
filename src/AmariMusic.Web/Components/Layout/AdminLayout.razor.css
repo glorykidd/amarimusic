@@ -1,0 +1,9 @@
+.admin-navbar {
+    background-color: #0f3460;
+    border-bottom: 2px solid #6495ed;
+}
+
+.admin-main {
+    background-color: #f0f4ff;
+    min-height: calc(100vh - 56px);
+}
