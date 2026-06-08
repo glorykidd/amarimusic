@@ -1,0 +1,161 @@
+@page "/admin/contacts/{Id:int}"
+@layout AdminLayout
+@attribute [Authorize]
+@using AmariMusic.Data
+@using AmariMusic.Models
+@inject ContactDbContext Db
+@inject NavigationManager Nav
+
+<PageTitle>Inquiry #@Id | Admin</PageTitle>
+
+<div class="mb-3">
+    <a href="/admin/contacts" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Back to Inquiries
+    </a>
+</div>
+
+@if (_submission is null)
+{
+    <div class="alert alert-warning rounded-4">Inquiry not found.</div>
+}
+else
+{
+    <div class="row g-4">
+        <!-- Submission details -->
+        <div class="col-lg-7">
+            <div class="card shadow-sm rounded-4 border-0">
+                <div class="card-header bg-dark text-white rounded-top-4 d-flex justify-content-between align-items-center py-3 px-4">
+                    <span class="fw-bold fs-5">Inquiry #@_submission.Id</span>
+                    @if (_submission.ViewedAt is null)
+                    {
+                        <span class="badge bg-warning text-dark">New</span>
+                    }
+                    else if (_submission.RepliedAt is not null)
+                    {
+                        <span class="badge bg-success">Replied @_submission.RepliedAt.Value.ToLocalTime().ToString("MMM d")</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">Viewed</span>
+                    }
+                </div>
+                <div class="card-body p-4">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-3">Name</dt>
+                        <dd class="col-sm-9 fw-semibold">@_submission.Name</dd>
+
+                        <dt class="col-sm-3">Email</dt>
+                        <dd class="col-sm-9">
+                            <a href="mailto:@_submission.Email">@_submission.Email</a>
+                        </dd>
+
+                        <dt class="col-sm-3">Phone</dt>
+                        <dd class="col-sm-9">
+                            @if (_submission.Phone is not null)
+                            {
+                                <a href="tel:@_submission.Phone">@_submission.Phone</a>
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-3">Submitted</dt>
+                        <dd class="col-sm-9">@_submission.SubmittedAt.ToLocalTime().ToString("f")</dd>
+
+                        <dt class="col-sm-3">Viewed</dt>
+                        <dd class="col-sm-9">@(_submission.ViewedAt.HasValue ? _submission.ViewedAt.Value.ToLocalTime().ToString("f") : "—")</dd>
+                    </dl>
+
+                    <hr class="my-4" />
+
+                    <h3 class="fs-5 fw-bold mb-3">Message</h3>
+                    <p style="white-space: pre-wrap;" class="bg-light rounded-3 p-3">@_submission.Message</p>
+
+                    <div class="d-flex gap-2 mt-4">
+                        <a href="mailto:@_submission.Email?subject=Re: Your Inquiry to Turley Richards"
+                           class="btn btn-primary">
+                            <i class="bi bi-reply me-2"></i>Reply via Email
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin notes / reply log -->
+        <div class="col-lg-5">
+            <div class="card shadow-sm rounded-4 border-0">
+                <div class="card-header bg-dark text-white rounded-top-4 py-3 px-4">
+                    <span class="fw-bold">Admin Notes</span>
+                </div>
+                <div class="card-body p-4">
+                    @if (_submission.AdminReply is not null)
+                    {
+                        <div class="mb-3">
+                            <div class="text-muted small mb-1">Saved on @_submission.RepliedAt?.ToLocalTime().ToString("f")</div>
+                            <p class="bg-light rounded-3 p-3" style="white-space: pre-wrap;">@_submission.AdminReply</p>
+                        </div>
+                    }
+
+                    <EditForm Model="_replyModel" OnValidSubmit="SaveReply" FormName="admin-reply" Enhance="true">
+                        <DataAnnotationsValidator />
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Notes / Reply Log</label>
+                            <InputTextArea @bind-Value="_replyModel.Notes" class="form-control" rows="5"
+                                          placeholder="Log your reply or any follow-up notes here..." />
+                        </div>
+                        <button type="submit" class="btn btn-outline-primary w-100">
+                            <i class="bi bi-save me-2"></i>Save Notes
+                        </button>
+                    </EditForm>
+
+                    @if (_noteSaved)
+                    {
+                        <div class="alert alert-success mt-3 rounded-3 py-2 text-center" role="alert">
+                            <i class="bi bi-check me-1"></i> Saved
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    [SupplyParameterFromForm(FormName = "admin-reply")]
+    private ReplyModel _replyModel { get; set; } = new();
+
+    private ContactSubmission? _submission;
+    private bool _noteSaved;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _submission = await Db.ContactSubmissions.FindAsync(Id);
+        if (_submission is not null && _submission.ViewedAt is null)
+        {
+            _submission.ViewedAt = DateTime.UtcNow;
+            await Db.SaveChangesAsync();
+        }
+        if (_submission?.AdminReply is not null)
+        {
+            _replyModel.Notes = _submission.AdminReply;
+        }
+    }
+
+    private async Task SaveReply()
+    {
+        if (_submission is null) return;
+        _submission.AdminReply = _replyModel.Notes;
+        _submission.RepliedAt = DateTime.UtcNow;
+        await Db.SaveChangesAsync();
+        _noteSaved = true;
+    }
+
+    private class ReplyModel
+    {
+        public string Notes { get; set; } = string.Empty;
+    }
+}

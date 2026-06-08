@@ -1,0 +1,20 @@
+@inherits LayoutComponentBase
+
+<nav class="navbar navbar-expand-md navbar-dark admin-navbar">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/admin">
+            <i class="bi bi-music-note-beamed me-2"></i>Amari Music Admin
+        </a>
+        <div class="d-flex align-items-center gap-3">
+            <a href="/admin" class="nav-link text-light">Dashboard</a>
+            <a href="/admin/contacts" class="nav-link text-light">Inquiries</a>
+            <a href="/admin/logout" class="btn btn-outline-light btn-sm">Sign Out</a>
+        </div>
+    </div>
+</nav>
+
+<main class="admin-main">
+    <div class="container-fluid py-4">
+        @Body
+    </div>
+</main>
