@@ -34,7 +34,7 @@ crawlers and users alike see immediately.
 ```
 src/AmariMusic.Web/
   Components/
-    App.razor              # HTML shell — <head> meta, Bootstrap CDN, security headers apply site-wide via middleware
+    App.razor              # HTML shell — <head> meta, Bootstrap Icons CDN, security headers apply site-wide via middleware
     Routes.razor           # Router with NotFound fallback
     Layout/
       MainLayout.razor     # Top nav + <main> + footer wrapper
