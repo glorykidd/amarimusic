@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using System.Threading.RateLimiting;
 
 // One-off CLI helper: `dotnet run -- hash-password` prompts for a password and
 // prints a hash to paste into AdminAuth:PasswordHash, without needing a scripting
@@ -45,12 +46,23 @@ builder.Services.AddAuthorization();
 // Email
 builder.Services.AddScoped<EmailService>();
 
-// Rate limiting on login endpoint
+// Rate limiting on login endpoint, partitioned per client IP so one abusive
+// IP can't exhaust the shared bucket and lock out every other client.
 builder.Services.AddRateLimiter(options =>
-    options.AddFixedWindowLimiter("login", o =>
+    options.AddPolicy("login", httpContext =>
     {
-        o.PermitLimit = 5;
-        o.Window = TimeSpan.FromMinutes(15);
+        // A null RemoteIpAddress shouldn't happen under normal IIS/Kestrel TCP
+        // hosting, but if it ever does, give each such request its own
+        // one-off partition instead of bucketing them all under a shared key
+        // (which would recreate the original shared-bucket lockout).
+        var partitionKey = httpContext.Connection.RemoteIpAddress?.ToString() ?? Guid.NewGuid().ToString();
+        return RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey,
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(15)
+            });
     }));
 
 // Warn if email not configured
