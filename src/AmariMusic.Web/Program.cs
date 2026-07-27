@@ -110,11 +110,12 @@ app.MapPost("/admin/do-login", async (HttpContext ctx, IConfiguration config, IA
 }).RequireRateLimiting("login");
 
 // Admin logout
-app.MapGet("/admin/logout", async (HttpContext ctx) =>
+app.MapPost("/admin/logout", async (HttpContext ctx, IAntiforgery antiforgery) =>
 {
+    await antiforgery.ValidateRequestAsync(ctx);
     await ctx.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
     return Results.Redirect("/");
-});
+}).RequireAuthorization();
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>();

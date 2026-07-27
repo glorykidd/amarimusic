@@ -8,7 +8,10 @@
         <div class="d-flex align-items-center gap-3">
             <a href="/admin" class="nav-link text-light">Dashboard</a>
             <a href="/admin/contacts" class="nav-link text-light">Inquiries</a>
-            <a href="/admin/logout" class="btn btn-outline-light btn-sm">Sign Out</a>
+            <form method="post" action="/admin/logout" class="d-inline">
+                <AntiforgeryToken />
+                <button type="submit" class="btn btn-outline-light btn-sm">Sign Out</button>
+            </form>
         </div>
     </div>
 </nav>

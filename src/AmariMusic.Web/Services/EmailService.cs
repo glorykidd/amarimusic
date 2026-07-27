@@ -25,6 +25,11 @@ public class EmailService(IConfiguration config, ILogger<EmailService> logger)
             message.To.Add(MailboxAddress.Parse(config["Email:AdminNotificationAddress"]!));
             message.Subject = $"New Contact Inquiry from {submission.Name}";
 
+            var baseUrl = config["App:BaseUrl"]?.TrimEnd('/');
+            var contactUrl = string.IsNullOrWhiteSpace(baseUrl)
+                ? $"/admin/contacts/{submission.Id}"
+                : $"{baseUrl}/admin/contacts/{submission.Id}";
+
             var body = new BodyBuilder
             {
                 HtmlBody = $"""
@@ -38,7 +43,7 @@ public class EmailService(IConfiguration config, ILogger<EmailService> logger)
                     <h3>Message</h3>
                     <p style="white-space:pre-wrap;">{System.Web.HttpUtility.HtmlEncode(submission.Message)}</p>
                     <hr/>
-                    <p><a href="/admin/contacts/{submission.Id}">View in admin dashboard</a></p>
+                    <p><a href="{contactUrl}">View in admin dashboard</a></p>
                     """
             };
             message.Body = body.ToMessageBody();

@@ -1,4 +1,7 @@
 {
+  "App": {
+    "BaseUrl": "https://amarimusic.com"
+  },
   "AdminAuth": {
     "Username": "",
     "PasswordHash": ""

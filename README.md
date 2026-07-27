@@ -18,6 +18,13 @@ environment — the app throws at startup otherwise. To configure them:
 For local development, use `dotnet user-secrets` instead of committing real
 credentials to `appsettings.Development.json`.
 
+## App:BaseUrl
+
+Set `App:BaseUrl` (e.g. `https://amarimusic.com`) in `appsettings.Production.json`
+so admin-notification emails link to an absolute `/admin/contacts/{id}` URL —
+without it, the link in the email is relative and won't resolve in an email
+client.
+
 ## Tests
 
 ```bash
