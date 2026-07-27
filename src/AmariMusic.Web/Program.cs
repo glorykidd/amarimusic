@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using System.Threading.RateLimiting;
 
 // One-off CLI helper: `dotnet run -- hash-password` prompts for a password and
 // prints a hash to paste into AdminAuth:PasswordHash, without needing a scripting
@@ -45,13 +46,17 @@ builder.Services.AddAuthorization();
 // Email
 builder.Services.AddScoped<EmailService>();
 
-// Rate limiting on login endpoint
+// Rate limiting on login endpoint, partitioned per client IP so one abusive
+// IP can't exhaust the shared bucket and lock out every other client.
 builder.Services.AddRateLimiter(options =>
-    options.AddFixedWindowLimiter("login", o =>
-    {
-        o.PermitLimit = 5;
-        o.Window = TimeSpan.FromMinutes(15);
-    }));
+    options.AddPolicy("login", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 5,
+                Window = TimeSpan.FromMinutes(15)
+            })));
 
 // Warn if email not configured
 if (string.IsNullOrWhiteSpace(builder.Configuration["Email:SmtpHost"]))
