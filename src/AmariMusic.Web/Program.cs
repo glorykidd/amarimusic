@@ -10,6 +10,18 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
+// One-off CLI helper: `dotnet run -- hash-password` prompts for a password and
+// prints a hash to paste into AdminAuth:PasswordHash, without needing a scripting
+// tool. The password is read from stdin, not argv, so it never appears in the
+// process list or shell history.
+if (args.Length == 1 && args[0] == "hash-password")
+{
+    Console.Write("Enter password to hash: ");
+    var password = Console.ReadLine() ?? string.Empty;
+    Console.WriteLine(PasswordHasher.Hash(password));
+    return;
+}
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorComponents();
@@ -47,6 +59,9 @@ if (string.IsNullOrWhiteSpace(builder.Configuration["Email:SmtpHost"]))
     Console.WriteLine("WARNING: Email:SmtpHost not configured. Admin notifications will be skipped.");
 }
 
+// Refuse to boot outside Development with missing admin credentials
+AdminAuthValidator.ValidateOrThrow(builder.Environment, builder.Configuration);
+
 var app = builder.Build();
 
 // Auto-migrate on startup
@@ -79,12 +94,11 @@ app.MapPost("/admin/do-login", async (HttpContext ctx, IConfiguration config, IA
     var password = form["password"].ToString();
 
     var expectedUser = config["AdminAuth:Username"] ?? string.Empty;
-    var expectedPass = config["AdminAuth:Password"] ?? string.Empty;
+    var expectedPasswordHash = config["AdminAuth:PasswordHash"];
 
     var userMatch = CryptographicOperations.FixedTimeEquals(
         Encoding.UTF8.GetBytes(username), Encoding.UTF8.GetBytes(expectedUser));
-    var passMatch = CryptographicOperations.FixedTimeEquals(
-        Encoding.UTF8.GetBytes(password), Encoding.UTF8.GetBytes(expectedPass));
+    var passMatch = PasswordHasher.Verify(password, expectedPasswordHash);
 
     if (!userMatch || !passMatch)
         return Results.Redirect("/admin/login?_error=true");

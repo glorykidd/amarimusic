@@ -6,7 +6,7 @@ permissions:
 on:
   push:
     branches: ["main"]
-    paths: [ src/** ]
+    paths: [ src/**, tests/** ]
 
   workflow_dispatch:
 
@@ -56,10 +56,24 @@ jobs:
           Add-Content -Path C:/deployment-stage/amari-${{ steps.buildid.outputs.formattedTime }}.txt -Value "---------------------------------"
           Add-Content -Path C:/deployment-stage/amari-${{ steps.buildid.outputs.formattedTime }}.txt -Value $(git diff --name-status HEAD~1..HEAD)
 
-      - name: Verify production config exists
+      - name: Test
         run: |
-          if (-not (Test-Path "C:/www-root/amarimusic.com/appsettings.Production.json")) {
+          cd tests/AmariMusic.Tests
+          dotnet test --configuration Release
+
+      - name: Verify production config exists and admin credentials are set
+        run: |
+          $configPath = "C:/www-root/amarimusic.com/appsettings.Production.json"
+          if (-not (Test-Path $configPath)) {
             Write-Error "appsettings.Production.json is missing from the server. Deploy aborted."
+            exit 1
+          }
+
+          $config = Get-Content $configPath -Raw | ConvertFrom-Json
+          $adminUser = $config.AdminAuth.Username
+          $adminPasswordHash = $config.AdminAuth.PasswordHash
+          if ([string]::IsNullOrWhiteSpace($adminUser) -or [string]::IsNullOrWhiteSpace($adminPasswordHash)) {
+            Write-Error "AdminAuth:Username / AdminAuth:PasswordHash are not set in appsettings.Production.json. Deploy aborted."
             exit 1
           }
 
