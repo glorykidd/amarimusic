@@ -107,6 +107,29 @@ if (!app.Environment.IsDevelopment())
 
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
+
+// Security headers. CSP allows Bootstrap Icons (jsdelivr), Cloudflare Turnstile
+// (script + its iframe challenge), and the Google Calendar iframe embed on
+// /calendar; style-src allows 'unsafe-inline' for the many inline style="..."
+// attributes already in the markup — a much smaller risk than allowing inline
+// scripts, which stays disallowed.
+app.Use((ctx, next) =>
+{
+    ctx.Response.Headers["X-Content-Type-Options"] = "nosniff";
+    ctx.Response.Headers["X-Frame-Options"] = "DENY";
+    ctx.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+    ctx.Response.Headers["Content-Security-Policy"] =
+        "default-src 'self'; " +
+        "frame-ancestors 'none'; " +
+        "script-src 'self' https://challenges.cloudflare.com; " +
+        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; " +
+        "font-src 'self' https://cdn.jsdelivr.net; " +
+        "img-src 'self' data:; " +
+        "frame-src https://challenges.cloudflare.com https://calendar.google.com; " +
+        "connect-src 'self'";
+    return next();
+});
+
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseAntiforgery();
