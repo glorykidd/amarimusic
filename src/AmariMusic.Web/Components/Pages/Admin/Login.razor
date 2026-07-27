@@ -5,6 +5,13 @@
 
 <PageTitle>Admin Login | Amari Music</PageTitle>
 
+@if (Turnstile.IsConfigured)
+{
+    <HeadContent>
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    </HeadContent>
+}
+
 <div class="row justify-content-center mt-5">
     <div class="col-md-4">
         <div class="card shadow-sm rounded-4">

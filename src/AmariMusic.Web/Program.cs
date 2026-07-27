@@ -47,7 +47,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddScoped<EmailService>();
 
 // Turnstile CAPTCHA verification (contact form + admin login)
-builder.Services.AddHttpClient();
+builder.Services.AddHttpClient(nameof(TurnstileService), client => client.Timeout = TimeSpan.FromSeconds(5));
 builder.Services.AddScoped<TurnstileService>();
 
 // Rate limiting, partitioned per client IP so one abusive IP can't exhaust

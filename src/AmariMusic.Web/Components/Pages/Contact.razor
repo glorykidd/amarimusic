@@ -17,6 +17,10 @@
 <HeadContent>
     <meta name="description" content="Get in touch with Turley Richards for vocal coaching, songwriting lessons, studio recording, or music therapy in Louisville, KY." />
     <link rel="canonical" href="/contact" />
+    @if (Turnstile.IsConfigured)
+    {
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    }
 </HeadContent>
 
 <section class="contact-section">
@@ -143,6 +147,9 @@
 
     private async Task HandleSubmit()
     {
+        _captchaError = false;
+        _submitError = false;
+
         if (Turnstile.IsConfigured)
         {
             var httpContext = HttpContextAccessor.HttpContext;
