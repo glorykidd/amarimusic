@@ -6,6 +6,10 @@
     "Username": "",
     "PasswordHash": ""
   },
+  "Turnstile": {
+    "SiteKey": "",
+    "SecretKey": ""
+  },
   "Email": {
     "SmtpHost": "",
     "SmtpPort": "587",

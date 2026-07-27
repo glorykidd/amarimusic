@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using System.Threading.RateLimiting;
 
 // One-off CLI helper: `dotnet run -- hash-password` prompts for a password and
 // prints a hash to paste into AdminAuth:PasswordHash, without needing a scripting
@@ -45,18 +46,45 @@ builder.Services.AddAuthorization();
 // Email
 builder.Services.AddScoped<EmailService>();
 
-// Rate limiting on login endpoint
+// Turnstile CAPTCHA verification (contact form + admin login)
+builder.Services.AddHttpClient(nameof(TurnstileService), client => client.Timeout = TimeSpan.FromSeconds(5));
+builder.Services.AddScoped<TurnstileService>();
+
+// Rate limiting, partitioned per client IP so one abusive IP can't exhaust
+// a shared bucket and lock out every other client.
 builder.Services.AddRateLimiter(options =>
-    options.AddFixedWindowLimiter("login", o =>
-    {
-        o.PermitLimit = 5;
-        o.Window = TimeSpan.FromMinutes(15);
-    }));
+{
+    options.AddPolicy("login", httpContext => PerIpFixedWindow(httpContext, permitLimit: 5, window: TimeSpan.FromMinutes(15)));
+    options.AddPolicy("contact", httpContext => PerIpFixedWindow(httpContext, permitLimit: 5, window: TimeSpan.FromMinutes(15)));
+});
+
+// A null RemoteIpAddress shouldn't happen under normal IIS/Kestrel TCP
+// hosting, but if it does (e.g. a misconfigured reverse proxy), fall back to
+// a single shared "unknown" bucket so all such requests are throttled
+// together. A fresh GUID per request would give each one its own unlimited
+// bucket — defeating rate limiting entirely and leaking memory unboundedly.
+static RateLimitPartition<string> PerIpFixedWindow(HttpContext httpContext, int permitLimit, TimeSpan window)
+{
+    var partitionKey = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+    return RateLimitPartition.GetFixedWindowLimiter(
+        partitionKey,
+        factory: _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = permitLimit,
+            Window = window
+        });
+}
 
 // Warn if email not configured
 if (string.IsNullOrWhiteSpace(builder.Configuration["Email:SmtpHost"]))
 {
     Console.WriteLine("WARNING: Email:SmtpHost not configured. Admin notifications will be skipped.");
+}
+
+// Warn if Turnstile not configured outside Development
+if (!builder.Environment.IsDevelopment() && string.IsNullOrWhiteSpace(builder.Configuration["Turnstile:SecretKey"]))
+{
+    Console.WriteLine("WARNING: Turnstile:SecretKey not configured. Contact form and admin login will run without CAPTCHA protection.");
 }
 
 // Refuse to boot outside Development with missing admin credentials
@@ -85,7 +113,7 @@ app.UseAntiforgery();
 app.UseRateLimiter();
 
 // Admin login POST handler
-app.MapPost("/admin/do-login", async (HttpContext ctx, IConfiguration config, IAntiforgery antiforgery) =>
+app.MapPost("/admin/do-login", async (HttpContext ctx, IConfiguration config, IAntiforgery antiforgery, TurnstileService turnstile) =>
 {
     try
     {
@@ -99,6 +127,14 @@ app.MapPost("/admin/do-login", async (HttpContext ctx, IConfiguration config, IA
     var form = await ctx.Request.ReadFormAsync();
     var username = form["username"].ToString();
     var password = form["password"].ToString();
+
+    if (turnstile.IsConfigured)
+    {
+        var captchaToken = form["cf-turnstile-response"].ToString();
+        var remoteIp = ctx.Connection.RemoteIpAddress?.ToString();
+        if (!await turnstile.VerifyAsync(captchaToken, remoteIp))
+            return Results.Redirect("/admin/login?_captchaError=true");
+    }
 
     var expectedUser = config["AdminAuth:Username"] ?? string.Empty;
     var expectedPasswordHash = config["AdminAuth:PasswordHash"];
