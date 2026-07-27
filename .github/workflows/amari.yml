@@ -87,8 +87,8 @@ jobs:
       - name: Stop IIS app pool before deploy
         run: |
           Import-Module WebAdministration
-          if ((Get-WebAppPoolState -Name "AmariMusic" -ErrorAction SilentlyContinue).Value -eq "Started") {
-            Stop-WebAppPool -Name "AmariMusic"
+          if ((Get-WebAppPoolState -Name "Turleyrichards" -ErrorAction SilentlyContinue).Value -eq "Started") {
+            Stop-WebAppPool -Name "Turleyrichards"
             Start-Sleep -Seconds 3
           }
 
@@ -103,7 +103,7 @@ jobs:
       - name: Start IIS app pool after deploy
         run: |
           Import-Module WebAdministration
-          Start-WebAppPool -Name "AmariMusic"
+          Start-WebAppPool -Name "Turleyrichards"
 
       - name: Email Notification
         run: |
