@@ -6,7 +6,7 @@ permissions:
 on:
   push:
     branches: ["main"]
-    paths: [ src/** ]
+    paths: [ src/**, tests/** ]
 
   workflow_dispatch:
 
@@ -55,6 +55,11 @@ jobs:
           Add-Content -Path C:/deployment-stage/amari-${{ steps.buildid.outputs.formattedTime }}.txt -Value "Changed Files"
           Add-Content -Path C:/deployment-stage/amari-${{ steps.buildid.outputs.formattedTime }}.txt -Value "---------------------------------"
           Add-Content -Path C:/deployment-stage/amari-${{ steps.buildid.outputs.formattedTime }}.txt -Value $(git diff --name-status HEAD~1..HEAD)
+
+      - name: Test
+        run: |
+          cd tests/AmariMusic.Tests
+          dotnet test --configuration Release
 
       - name: Verify production config exists and admin credentials are set
         run: |

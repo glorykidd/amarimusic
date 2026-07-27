@@ -55,18 +55,8 @@ if (string.IsNullOrWhiteSpace(builder.Configuration["Email:SmtpHost"]))
     Console.WriteLine("WARNING: Email:SmtpHost not configured. Admin notifications will be skipped.");
 }
 
-// Refuse to boot outside Development with missing/insecure admin credentials
-if (!builder.Environment.IsDevelopment())
-{
-    var adminUser = builder.Configuration["AdminAuth:Username"];
-    var adminPasswordHash = builder.Configuration["AdminAuth:PasswordHash"];
-
-    if (string.IsNullOrWhiteSpace(adminUser) || string.IsNullOrWhiteSpace(adminPasswordHash))
-    {
-        throw new InvalidOperationException(
-            "AdminAuth:Username and AdminAuth:PasswordHash must be set in appsettings.Production.json (or appsettings.{Environment}.json) before starting outside the Development environment.");
-    }
-}
+// Refuse to boot outside Development with missing admin credentials
+AdminAuthValidator.ValidateOrThrow(builder.Environment, builder.Configuration);
 
 var app = builder.Build();
 

@@ -6,7 +6,7 @@ permissions:
 on:
   push:
     branches: ["develop"]
-    paths: [ src/** ]
+    paths: [ src/**, tests/** ]
 
   workflow_dispatch:
 
@@ -36,6 +36,11 @@ jobs:
         run: |
           cd src/AmariMusic.Web
           dotnet build --configuration Release
+
+      - name: Test
+        run: |
+          cd tests/AmariMusic.Tests
+          dotnet test --configuration Release
 
       - name: List all changed files
         run: |

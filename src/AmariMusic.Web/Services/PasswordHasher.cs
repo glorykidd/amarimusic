@@ -25,7 +25,7 @@ public static class PasswordHasher
             return false;
 
         var parts = encodedHash.Split('.');
-        if (parts.Length != 3 || !int.TryParse(parts[0], out var iterations))
+        if (parts.Length != 3 || !int.TryParse(parts[0], out var iterations) || iterations < 1)
             return false;
 
         byte[] salt, expectedHash;
@@ -38,6 +38,9 @@ public static class PasswordHasher
         {
             return false;
         }
+
+        if (salt.Length != SaltSize || expectedHash.Length != HashSize)
+            return false;
 
         var actualHash = Rfc2898DeriveBytes.Pbkdf2(password, salt, iterations, HashAlgorithmName.SHA256, expectedHash.Length);
         return CryptographicOperations.FixedTimeEquals(actualHash, expectedHash);

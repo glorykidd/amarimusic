@@ -13,6 +13,12 @@ dotnet build src/AmariMusic.Web
 
 # Watch (hot reload)
 dotnet watch --project src/AmariMusic.Web
+
+# Run tests
+dotnet test tests/AmariMusic.Tests
+
+# Generate an AdminAuth:PasswordHash value to paste into appsettings.Production.json
+dotnet run --project src/AmariMusic.Web -- hash-password <password>
 ```
 
 ## Architecture
@@ -33,10 +39,16 @@ src/AmariMusic.Web/
       Calendar.razor       # /calendar — Google Calendar embed
       NotFound.razor       # 404
       Error.razor          # Unhandled exception display
+  Services/
+    EmailService.cs        # SMTP notification email for new contact submissions
+    PasswordHasher.cs      # PBKDF2 hash/verify for AdminAuth:PasswordHash
+    AdminAuthValidator.cs  # Startup guard — throws outside Development if AdminAuth is unset
   wwwroot/
     app.css                # All site styles (no external CSS beyond Bootstrap + Bootstrap Icons)
     images/                # Copied from original trich.new site (Turley Richards photos/icons)
     lib/bootstrap/         # Bootstrap 5 local copy (used for CSS; JS loaded from lib too)
+tests/
+  AmariMusic.Tests/         # xUnit tests for Services/ (PasswordHasher, AdminAuthValidator)
 ```
 
 ## Key design decisions
@@ -46,6 +58,7 @@ src/AmariMusic.Web/
 - **`@@` escaping**: Razor treats `@` as a C# expression delimiter. URLs containing `@` (e.g. YouTube `@handle`) must be written as `@@` in `.razor` files.
 - **Scoped CSS**: layout components use `.razor.css` co-located files; page-level styles live in `app.css` organized by section.
 - **Images**: all static assets in `wwwroot/images/` — referenced as `/images/filename.ext` (absolute paths, no `~`).
+- **AdminAuth startup guard**: `AdminAuthValidator` throws at startup outside the Development environment if `AdminAuth:Username`/`AdminAuth:PasswordHash` aren't set, so the app fails fast instead of booting with an unprotected `/admin` login. `appsettings.Production.json` (git-ignored) is the source of these values on the server — see the README for how to generate a password hash.
 
 ## Subject matter
 
