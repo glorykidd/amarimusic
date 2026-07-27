@@ -25,6 +25,17 @@ so admin-notification emails link to an absolute `/admin/contacts/{id}` URL —
 without it, the link in the email is relative and won't resolve in an email
 client.
 
+## Turnstile CAPTCHA
+
+The contact form and admin login both use [Cloudflare Turnstile](https://developers.cloudflare.com/turnstile/)
+as a bot-protection layer. Both pages fall back to no CAPTCHA (widget hidden,
+verification skipped) when `Turnstile:SecretKey` is unset — this keeps local
+development friction-free, but means Turnstile must be explicitly configured
+in production.
+
+1. Create a Turnstile widget in the Cloudflare dashboard for the site's domain.
+2. Set `Turnstile:SiteKey` and `Turnstile:SecretKey` in `appsettings.Production.json`.
+
 ## Tests
 
 ```bash

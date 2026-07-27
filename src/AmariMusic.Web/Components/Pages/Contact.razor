@@ -1,17 +1,26 @@
 @page "/contact"
+@attribute [EnableRateLimiting("contact")]
 @using System.ComponentModel.DataAnnotations
 @using AmariMusic.Data
 @using AmariMusic.Models
 @using AmariMusic.Services
+@using Microsoft.AspNetCore.RateLimiting
 @inject ContactDbContext Db
 @inject EmailService Email
 @inject ILogger<Contact> Logger
+@inject TurnstileService Turnstile
+@inject IHttpContextAccessor HttpContextAccessor
+@inject IConfiguration Config
 
 <PageTitle>Contact | Turley Richards</PageTitle>
 
 <HeadContent>
     <meta name="description" content="Get in touch with Turley Richards for vocal coaching, songwriting lessons, studio recording, or music therapy in Louisville, KY." />
     <link rel="canonical" href="/contact" />
+    @if (Turnstile.IsConfigured)
+    {
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+    }
 </HeadContent>
 
 <section class="contact-section">
@@ -70,6 +79,17 @@
                                 <ValidationMessage For="() => Input.Message" class="text-danger small mt-1" />
                             </div>
 
+                            @if (Turnstile.IsConfigured)
+                            {
+                                <div class="mb-4">
+                                    <div class="cf-turnstile" data-sitekey="@Config["Turnstile:SiteKey"]"></div>
+                                    @if (_captchaError)
+                                    {
+                                        <div class="text-danger small mt-1">Please complete the verification challenge.</div>
+                                    }
+                                </div>
+                            }
+
                             <div class="d-grid">
                                 <button type="submit" class="btn btn-primary btn-lg">
                                     <i class="bi bi-send me-2"></i>Send Message
@@ -122,10 +142,27 @@
 
     private bool _submitted;
     private bool _submitError;
+    private bool _captchaError;
     private string _submittedName = string.Empty;
 
     private async Task HandleSubmit()
     {
+        _captchaError = false;
+        _submitError = false;
+
+        if (Turnstile.IsConfigured)
+        {
+            var httpContext = HttpContextAccessor.HttpContext;
+            var token = httpContext?.Request.Form["cf-turnstile-response"].ToString();
+            var remoteIp = httpContext?.Connection.RemoteIpAddress?.ToString();
+
+            if (!await Turnstile.VerifyAsync(token, remoteIp))
+            {
+                _captchaError = true;
+                return;
+            }
+        }
+
         try
         {
             var submission = new ContactSubmission
