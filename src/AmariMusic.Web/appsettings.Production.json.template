@@ -1,6 +1,7 @@
 {
+  "AllowedHosts": "turleyrichards.com;www.turleyrichards.com",
   "App": {
-    "BaseUrl": "https://amarimusic.com"
+    "BaseUrl": "https://turleyrichards.com"
   },
   "AdminAuth": {
     "Username": "",
