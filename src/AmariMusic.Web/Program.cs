@@ -10,11 +10,15 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 
-// One-off CLI helper: `dotnet run -- hash-password <password>` prints a hash
-// to paste into AdminAuth:PasswordHash, without needing a scripting tool.
-if (args.Length == 2 && args[0] == "hash-password")
+// One-off CLI helper: `dotnet run -- hash-password` prompts for a password and
+// prints a hash to paste into AdminAuth:PasswordHash, without needing a scripting
+// tool. The password is read from stdin, not argv, so it never appears in the
+// process list or shell history.
+if (args.Length == 1 && args[0] == "hash-password")
 {
-    Console.WriteLine(PasswordHasher.Hash(args[1]));
+    Console.Write("Enter password to hash: ");
+    var password = Console.ReadLine() ?? string.Empty;
+    Console.WriteLine(PasswordHasher.Hash(password));
     return;
 }
 

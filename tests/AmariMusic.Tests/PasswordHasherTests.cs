@@ -42,6 +42,7 @@ public class PasswordHasherTests
     [InlineData("notanumber.dGVzdA==.dGVzdA==")]
     [InlineData("0.dGVzdA==.dGVzdA==")]
     [InlineData("-1.dGVzdA==.dGVzdA==")]
+    [InlineData("2147483647.dGVzdA==.dGVzdA==")]
     public void Verify_WithInvalidIterations_ReturnsFalse(string malformed)
     {
         Assert.False(PasswordHasher.Verify("anything", malformed));

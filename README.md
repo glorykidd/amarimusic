@@ -10,7 +10,8 @@ environment — the app throws at startup otherwise. To configure them:
    git-ignored and never committed).
 2. Generate a password hash:
    ```bash
-   dotnet run --project src/AmariMusic.Web -- hash-password <password>
+   dotnet run --project src/AmariMusic.Web -- hash-password
+   # then enter the password at the prompt
    ```
 3. Paste the printed value into `AdminAuth:PasswordHash`, and set `AdminAuth:Username`.
 

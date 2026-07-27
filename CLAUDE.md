@@ -18,7 +18,8 @@ dotnet watch --project src/AmariMusic.Web
 dotnet test tests/AmariMusic.Tests
 
 # Generate an AdminAuth:PasswordHash value to paste into appsettings.Production.json
-dotnet run --project src/AmariMusic.Web -- hash-password <password>
+# (prompts for the password on stdin — never pass it as a CLI argument)
+dotnet run --project src/AmariMusic.Web -- hash-password
 ```
 
 ## Architecture

@@ -9,6 +9,7 @@ namespace AmariMusic.Services;
 public static class PasswordHasher
 {
     private const int Iterations = 210_000;
+    private const int MaxIterations = 2_000_000;
     private const int SaltSize = 16;
     private const int HashSize = 32;
 
@@ -25,7 +26,7 @@ public static class PasswordHasher
             return false;
 
         var parts = encodedHash.Split('.');
-        if (parts.Length != 3 || !int.TryParse(parts[0], out var iterations) || iterations < 1)
+        if (parts.Length != 3 || !int.TryParse(parts[0], out var iterations) || iterations < 1 || iterations > MaxIterations)
             return false;
 
         byte[] salt, expectedHash;
