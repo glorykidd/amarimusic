@@ -1,0 +1,72 @@
+name: Build Amari Music
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: ["develop"]
+    paths: [ src/**, tests/** ]
+
+  workflow_dispatch:
+
+concurrency:
+  group: "amari"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: [ self-hosted ]
+    name: Build Amari Music
+    outputs:
+      build: ${{ steps.buildid.outputs.formattedTime }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Generate build number
+        id: buildid
+        run: |
+          $buildTime = (Get-Date).ToUniversalTime().ToString("yyyy.MM.dd-HH.mm")
+          echo "formattedTime=$buildTime" >> $env:GITHUB_OUTPUT
+
+      - name: Build
+        run: |
+          cd src/AmariMusic.Web
+          dotnet build --configuration Release
+
+      - name: Test
+        run: |
+          cd tests/AmariMusic.Tests
+          dotnet test --configuration Release
+
+      - name: List all changed files
+        run: |
+          Set-Content -Path C:/deployment-stage/amari-${{ steps.buildid.outputs.formattedTime }}.txt -Value ""
+          Add-Content -Path C:/deployment-stage/amari-${{ steps.buildid.outputs.formattedTime }}.txt -Value "Build Results for Amari Music"
+          Add-Content -Path C:/deployment-stage/amari-${{ steps.buildid.outputs.formattedTime }}.txt -Value ""
+          Add-Content -Path C:/deployment-stage/amari-${{ steps.buildid.outputs.formattedTime }}.txt -Value "Build Number - ${{ steps.buildid.outputs.formattedTime }}"
+          Add-Content -Path C:/deployment-stage/amari-${{ steps.buildid.outputs.formattedTime }}.txt -Value "---------------------------------"
+          Add-Content -Path C:/deployment-stage/amari-${{ steps.buildid.outputs.formattedTime }}.txt -Value ""
+          Add-Content -Path C:/deployment-stage/amari-${{ steps.buildid.outputs.formattedTime }}.txt -Value "Commit Item Messages:"
+          Add-Content -Path C:/deployment-stage/amari-${{ steps.buildid.outputs.formattedTime }}.txt -Value "---------------------------------"
+          $mergeCommit = git log --format=%B -n 1 HEAD
+          Add-Content -Path C:/deployment-stage/amari-${{ steps.buildid.outputs.formattedTime }}.txt -Value $mergeCommit
+          $parentCount = (git cat-file -p HEAD | Select-String "^parent").Count
+          if ($parentCount -gt 1) {
+            Add-Content -Path C:/deployment-stage/amari-${{ steps.buildid.outputs.formattedTime }}.txt -Value ""
+            Add-Content -Path C:/deployment-stage/amari-${{ steps.buildid.outputs.formattedTime }}.txt -Value "Included Commits:"
+            $prCommits = git log --format="- %s" HEAD^1..HEAD^2
+            Add-Content -Path C:/deployment-stage/amari-${{ steps.buildid.outputs.formattedTime }}.txt -Value ($prCommits -join "`n")
+          }
+          Add-Content -Path C:/deployment-stage/amari-${{ steps.buildid.outputs.formattedTime }}.txt -Value ""
+          Add-Content -Path C:/deployment-stage/amari-${{ steps.buildid.outputs.formattedTime }}.txt -Value "Changed Files"
+          Add-Content -Path C:/deployment-stage/amari-${{ steps.buildid.outputs.formattedTime }}.txt -Value "---------------------------------"
+          Add-Content -Path C:/deployment-stage/amari-${{ steps.buildid.outputs.formattedTime }}.txt -Value $(git diff --name-status HEAD~1..HEAD)
+
+      - name: Email Notification
+        run: |
+          cd D:/it-tools/mailer
+          ./SesMailer.exe --to "David Nuckolls <david.nuckolls@glorykidd.com>" --subject "Amari Music Build ${{ steps.buildid.outputs.formattedTime }}" --body C:/deployment-stage/amari-${{ steps.buildid.outputs.formattedTime }}.txt --format text --from-display-name "Amari Music"

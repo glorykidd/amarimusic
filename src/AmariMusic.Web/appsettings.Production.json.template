@@ -1,0 +1,18 @@
+{
+  "App": {
+    "BaseUrl": "https://amarimusic.com"
+  },
+  "AdminAuth": {
+    "Username": "",
+    "PasswordHash": ""
+  },
+  "Email": {
+    "SmtpHost": "",
+    "SmtpPort": "587",
+    "Username": "",
+    "Password": "",
+    "FromAddress": "",
+    "FromName": "Amari Music",
+    "AdminNotificationAddress": ""
+  }
+}

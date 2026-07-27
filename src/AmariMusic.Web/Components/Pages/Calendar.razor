@@ -1,0 +1,47 @@
+@page "/calendar"
+
+<PageTitle>Live Performances | Turley Richards Calendar</PageTitle>
+
+<HeadContent>
+    <meta name="description" content="See upcoming live performances and events featuring Turley Richards. Check the calendar for dates near you." />
+    <meta property="og:title" content="Live Performances | Turley Richards" />
+    <meta property="og:description" content="Upcoming events and live performances by Turley Richards." />
+    <link rel="canonical" href="/calendar" />
+</HeadContent>
+
+<section class="calendar-section" aria-labelledby="calendar-heading">
+    <div class="container py-5">
+        <div class="row mb-4">
+            <div class="col-12 text-center">
+                <h1 id="calendar-heading" class="section-heading">
+                    <i class="bi bi-calendar2-event me-2"></i>Live Performances
+                </h1>
+                <p class="lead">Stay up to date with Turley's upcoming shows and events.</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-12">
+                <div class="calendar-embed-wrapper rounded-4 shadow overflow-hidden">
+                    <iframe
+                        title="Turley Richards Performance Calendar"
+                        src="https://calendar.google.com/calendar/embed?src=turleyrichards%40gmail.com&ctz=America%2FNew_York"
+                        style="border:0"
+                        width="100%"
+                        height="800"
+                        frameborder="0"
+                        scrolling="no"
+                        loading="lazy">
+                    </iframe>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="col-12 text-center">
+                <p class="text-muted">
+                    Want to book Turley for an event?
+                    <a href="/contact" class="ms-1"><i class="bi bi-envelope me-1"></i>Send a Message</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,361 @@
+/* ============================================================
+   Base
+   ============================================================ */
+html, body {
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    color: #222;
+    scroll-behavior: smooth;
+}
+
+a {
+    color: #6495ed;
+}
+
+a:hover {
+    color: #4a7dd8;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+.section-heading {
+    font-size: 2rem;
+    font-weight: 700;
+    font-style: italic;
+    color: #1a1a2e;
+}
+
+/* ============================================================
+   Hero
+   ============================================================ */
+.hero-section {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+    color: whitesmoke;
+    min-height: 480px;
+}
+
+.hero-section .section-heading {
+    color: whitesmoke;
+}
+
+.hero-title {
+    font-size: 2.8rem;
+    font-weight: 800;
+    font-style: italic;
+    color: #e9f013;
+    line-height: 1.2;
+}
+
+.hero-lead {
+    font-size: 1.2rem;
+    color: #d0dff5;
+    line-height: 1.7;
+}
+
+.hero-img {
+    border-radius: 50px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    max-height: 420px;
+    object-fit: cover;
+}
+
+/* ============================================================
+   Services
+   ============================================================ */
+.services-section {
+    background-color: #f0f4ff;
+}
+
+.service-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 4px 16px rgba(100,149,237,0.12);
+    border: 1px solid #dce8ff;
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.service-card:hover {
+    box-shadow: 0 8px 32px rgba(100,149,237,0.25);
+    transform: translateY(-4px);
+}
+
+.service-icon {
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+}
+
+.service-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    font-style: italic;
+    color: #1a1a2e;
+    margin-bottom: 0.75rem;
+}
+
+/* ============================================================
+   Therapy
+   ============================================================ */
+.therapy-section {
+    background-color: #6495ed;
+    color: whitesmoke;
+}
+
+.therapy-section .section-heading {
+    color: white;
+}
+
+/* ============================================================
+   Album
+   ============================================================ */
+.album-section {
+    background-color: rgb(237, 196, 100);
+    color: #1a1a2e;
+}
+
+.album-cover {
+    max-height: 380px;
+    object-fit: cover;
+}
+
+/* ============================================================
+   Performers
+   ============================================================ */
+.performers-section {
+    background-image: url('/images/turleydailycup.jpeg');
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    color: white;
+}
+
+.performers-section::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 30, 0.72);
+}
+
+.performers-section .container {
+    position: relative;
+}
+
+.performers-section .section-heading {
+    color: white;
+}
+
+.performers-list {
+    font-size: 1.1rem;
+    line-height: 2;
+    color: #d0e8ff;
+}
+
+/* ============================================================
+   TV Appearances
+   ============================================================ */
+.tv-section {
+    background-color: #9500ff;
+    color: whitesmoke;
+}
+
+.tv-section .section-heading {
+    color: white;
+}
+
+.tv-list li {
+    padding: 0.4rem 0;
+}
+
+/* ============================================================
+   CTA
+   ============================================================ */
+.cta-section {
+    background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+    color: white;
+}
+
+.cta-section .section-heading {
+    color: #e9f013;
+    font-size: 2.5rem;
+}
+
+/* ============================================================
+   Bio Page
+   ============================================================ */
+.bio-hero-section {
+    background: linear-gradient(135deg, #2d1b69 0%, #1a1a2e 100%);
+    color: whitesmoke;
+}
+
+.bio-hero-section .section-heading {
+    color: #e9f013;
+}
+
+.bio-hero-img {
+    max-height: 460px;
+    object-fit: cover;
+    width: 100%;
+}
+
+.bio-career-section {
+    background-color: #f9f9f9;
+}
+
+.bio-teaching-section {
+    background-color: #6495ed;
+    color: whitesmoke;
+}
+
+.bio-teaching-section .section-heading {
+    color: white;
+}
+
+.bio-stats-section {
+    background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+    color: white;
+}
+
+.stat-card {
+    background: rgba(255,255,255,0.08);
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.15);
+}
+
+.stat-number {
+    font-size: 3rem;
+    font-weight: 800;
+    color: #e9f013;
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 1rem;
+    color: #a8c0ff;
+    margin-top: 0.5rem;
+}
+
+/* ============================================================
+   Calendar Page
+   ============================================================ */
+.calendar-section {
+    background-color: #f0f4ff;
+    min-height: 70vh;
+}
+
+.calendar-section .section-heading {
+    color: #1a1a2e;
+}
+
+.calendar-embed-wrapper {
+    background: white;
+    border: 1px solid #dce8ff;
+}
+
+/* ============================================================
+   Footer
+   ============================================================ */
+.site-footer {
+    background-color: #1a1a2e;
+    color: #a8c0ff;
+    border-top: 2px solid #6495ed;
+    font-size: 0.9rem;
+}
+
+/* ============================================================
+   Contact Page
+   ============================================================ */
+.contact-section {
+    background-color: #f0f4ff;
+    min-height: 70vh;
+}
+
+.contact-card {
+    background: white;
+    border: 1px solid #dce8ff;
+}
+
+.contact-info-card {
+    background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+    color: whitesmoke;
+}
+
+.contact-info-card h2,
+.contact-info-card h3 {
+    color: #e9f013;
+}
+
+.contact-info-list li {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    font-size: 1rem;
+}
+
+.contact-info-list li:last-child {
+    border-bottom: none;
+}
+
+.contact-info-list i {
+    font-size: 1.2rem;
+    color: #6495ed;
+    flex-shrink: 0;
+}
+
+.contact-info-list a {
+    color: #a8c0ff;
+    text-decoration: none;
+    word-break: break-all;
+}
+
+.contact-info-list a:hover {
+    color: #e9f013;
+}
+
+.services-checklist li {
+    padding: 0.35rem 0;
+    color: #d0dff5;
+}
+
+/* ============================================================
+   Admin
+   ============================================================ */
+.admin-stat-card {
+    background: white;
+}
+
+/* ============================================================
+   Blazor error UI
+   ============================================================ */
+.blazor-error-boundary {
+    background: #b32121;
+    padding: 1rem 1rem 1rem 3.7rem;
+    color: white;
+}
+
+.blazor-error-boundary::after {
+    content: "An error has occurred."
+}
+
+#blazor-error-ui {
+    color-scheme: light only;
+    background: lightyellow;
+    bottom: 0;
+    box-shadow: 0 -1px 2px rgba(0,0,0,0.2);
+    display: none;
+    left: 0;
+    padding: 0.6rem 1.25rem 0.7rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+}
