@@ -43,7 +43,7 @@ public class EmailService(IConfiguration config, ILogger<EmailService> logger)
                     <h3>Message</h3>
                     <p style="white-space:pre-wrap;">{System.Web.HttpUtility.HtmlEncode(submission.Message)}</p>
                     <hr/>
-                    <p><a href="{contactUrl}">View in admin dashboard</a></p>
+                    <p><a href="{System.Web.HttpUtility.HtmlEncode(contactUrl)}">View in admin dashboard</a></p>
                     """
             };
             message.Body = body.ToMessageBody();
