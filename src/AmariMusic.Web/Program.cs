@@ -126,7 +126,9 @@ app.Use((ctx, next) =>
         "font-src 'self' https://cdn.jsdelivr.net; " +
         "img-src 'self' data:; " +
         "frame-src https://challenges.cloudflare.com https://calendar.google.com; " +
-        "connect-src 'self'";
+        "connect-src 'self'; " +
+        "base-uri 'self'; " +
+        "form-action 'self'";
     return next();
 });
 
