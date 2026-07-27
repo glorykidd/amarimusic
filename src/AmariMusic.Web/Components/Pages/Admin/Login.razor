@@ -1,5 +1,7 @@
 @page "/admin/login"
 @layout AdminLayout
+@inject IConfiguration Config
+@inject AmariMusic.Services.TurnstileService Turnstile
 
 <PageTitle>Admin Login | Amari Music</PageTitle>
 
@@ -18,6 +20,13 @@
                     </div>
                 }
 
+                @if (_captchaError)
+                {
+                    <div class="alert alert-danger" role="alert">
+                        <i class="bi bi-exclamation-triangle me-2"></i>Please complete the verification challenge.
+                    </div>
+                }
+
                 <form method="post" action="/admin/do-login">
                     <AntiforgeryToken />
                     <div class="mb-3">
@@ -30,6 +39,12 @@
                         <input id="password" name="password" type="password" class="form-control form-control-lg"
                                autocomplete="current-password" required />
                     </div>
+                    @if (Turnstile.IsConfigured)
+                    {
+                        <div class="mb-4">
+                            <div class="cf-turnstile" data-sitekey="@Config["Turnstile:SiteKey"]"></div>
+                        </div>
+                    }
                     <div class="d-grid">
                         <button type="submit" class="btn btn-primary btn-lg">Sign In</button>
                     </div>
@@ -42,4 +57,7 @@
 @code {
     [SupplyParameterFromQuery]
     private bool _error { get; set; }
+
+    [SupplyParameterFromQuery]
+    private bool _captchaError { get; set; }
 }

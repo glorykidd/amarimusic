@@ -44,12 +44,13 @@ src/AmariMusic.Web/
     EmailService.cs        # SMTP notification email for new contact submissions
     PasswordHasher.cs      # PBKDF2 hash/verify for AdminAuth:PasswordHash
     AdminAuthValidator.cs  # Startup guard — throws outside Development if AdminAuth is unset
+    TurnstileService.cs    # Cloudflare Turnstile CAPTCHA verification (contact form + admin login)
   wwwroot/
     app.css                # All site styles (no external CSS beyond Bootstrap + Bootstrap Icons)
     images/                # Copied from original trich.new site (Turley Richards photos/icons)
     lib/bootstrap/         # Bootstrap 5 local copy (used for CSS; JS loaded from lib too)
 tests/
-  AmariMusic.Tests/         # xUnit tests for Services/ (PasswordHasher, AdminAuthValidator)
+  AmariMusic.Tests/         # xUnit tests for Services/ (PasswordHasher, AdminAuthValidator, TurnstileService)
 ```
 
 ## Key design decisions
@@ -60,6 +61,7 @@ tests/
 - **Scoped CSS**: layout components use `.razor.css` co-located files; page-level styles live in `app.css` organized by section.
 - **Images**: all static assets in `wwwroot/images/` — referenced as `/images/filename.ext` (absolute paths, no `~`).
 - **AdminAuth startup guard**: `AdminAuthValidator` throws at startup outside the Development environment if `AdminAuth:Username`/`AdminAuth:PasswordHash` aren't set, so the app fails fast instead of booting with an unprotected `/admin` login. `appsettings.Production.json` (git-ignored) is the source of these values on the server — see the README for how to generate a password hash.
+- **Turnstile CAPTCHA is opt-in via config**: both the contact form (`Contact.razor`) and admin login (`Login.razor`) render the Turnstile widget and verify tokens server-side only when `Turnstile:SecretKey` is set (`TurnstileService.IsConfigured`). This keeps local dev frictionless but means production must explicitly set `Turnstile:SiteKey`/`Turnstile:SecretKey` — see the README.
 
 ## Subject matter
 

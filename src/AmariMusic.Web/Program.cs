@@ -46,29 +46,44 @@ builder.Services.AddAuthorization();
 // Email
 builder.Services.AddScoped<EmailService>();
 
-// Rate limiting on login endpoint, partitioned per client IP so one abusive
-// IP can't exhaust the shared bucket and lock out every other client.
+// Turnstile CAPTCHA verification (contact form + admin login)
+builder.Services.AddHttpClient();
+builder.Services.AddScoped<TurnstileService>();
+
+// Rate limiting, partitioned per client IP so one abusive IP can't exhaust
+// a shared bucket and lock out every other client.
 builder.Services.AddRateLimiter(options =>
-    options.AddPolicy("login", httpContext =>
-    {
-        // A null RemoteIpAddress shouldn't happen under normal IIS/Kestrel TCP
-        // hosting, but if it ever does, give each such request its own
-        // one-off partition instead of bucketing them all under a shared key
-        // (which would recreate the original shared-bucket lockout).
-        var partitionKey = httpContext.Connection.RemoteIpAddress?.ToString() ?? Guid.NewGuid().ToString();
-        return RateLimitPartition.GetFixedWindowLimiter(
-            partitionKey,
-            factory: _ => new FixedWindowRateLimiterOptions
-            {
-                PermitLimit = 5,
-                Window = TimeSpan.FromMinutes(15)
-            });
-    }));
+{
+    options.AddPolicy("login", httpContext => PerIpFixedWindow(httpContext, permitLimit: 5, window: TimeSpan.FromMinutes(15)));
+    options.AddPolicy("contact", httpContext => PerIpFixedWindow(httpContext, permitLimit: 5, window: TimeSpan.FromMinutes(15)));
+});
+
+// A null RemoteIpAddress shouldn't happen under normal IIS/Kestrel TCP
+// hosting, but if it ever does, give each such request its own one-off
+// partition instead of bucketing them all under a shared key (which would
+// recreate the original shared-bucket lockout).
+static RateLimitPartition<string> PerIpFixedWindow(HttpContext httpContext, int permitLimit, TimeSpan window)
+{
+    var partitionKey = httpContext.Connection.RemoteIpAddress?.ToString() ?? Guid.NewGuid().ToString();
+    return RateLimitPartition.GetFixedWindowLimiter(
+        partitionKey,
+        factory: _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = permitLimit,
+            Window = window
+        });
+}
 
 // Warn if email not configured
 if (string.IsNullOrWhiteSpace(builder.Configuration["Email:SmtpHost"]))
 {
     Console.WriteLine("WARNING: Email:SmtpHost not configured. Admin notifications will be skipped.");
+}
+
+// Warn if Turnstile not configured outside Development
+if (!builder.Environment.IsDevelopment() && string.IsNullOrWhiteSpace(builder.Configuration["Turnstile:SecretKey"]))
+{
+    Console.WriteLine("WARNING: Turnstile:SecretKey not configured. Contact form and admin login will run without CAPTCHA protection.");
 }
 
 // Refuse to boot outside Development with missing admin credentials
@@ -97,7 +112,7 @@ app.UseAntiforgery();
 app.UseRateLimiter();
 
 // Admin login POST handler
-app.MapPost("/admin/do-login", async (HttpContext ctx, IConfiguration config, IAntiforgery antiforgery) =>
+app.MapPost("/admin/do-login", async (HttpContext ctx, IConfiguration config, IAntiforgery antiforgery, TurnstileService turnstile) =>
 {
     try
     {
@@ -111,6 +126,14 @@ app.MapPost("/admin/do-login", async (HttpContext ctx, IConfiguration config, IA
     var form = await ctx.Request.ReadFormAsync();
     var username = form["username"].ToString();
     var password = form["password"].ToString();
+
+    if (turnstile.IsConfigured)
+    {
+        var captchaToken = form["cf-turnstile-response"].ToString();
+        var remoteIp = ctx.Connection.RemoteIpAddress?.ToString();
+        if (!await turnstile.VerifyAsync(captchaToken, remoteIp))
+            return Results.Redirect("/admin/login?_captchaError=true");
+    }
 
     var expectedUser = config["AdminAuth:Username"] ?? string.Empty;
     var expectedPasswordHash = config["AdminAuth:PasswordHash"];
