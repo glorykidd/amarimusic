@@ -87,7 +87,14 @@ app.UseRateLimiter();
 // Admin login POST handler
 app.MapPost("/admin/do-login", async (HttpContext ctx, IConfiguration config, IAntiforgery antiforgery) =>
 {
-    await antiforgery.ValidateRequestAsync(ctx);
+    try
+    {
+        await antiforgery.ValidateRequestAsync(ctx);
+    }
+    catch (AntiforgeryValidationException)
+    {
+        return Results.BadRequest();
+    }
 
     var form = await ctx.Request.ReadFormAsync();
     var username = form["username"].ToString();
@@ -110,11 +117,20 @@ app.MapPost("/admin/do-login", async (HttpContext ctx, IConfiguration config, IA
 }).RequireRateLimiting("login");
 
 // Admin logout
-app.MapGet("/admin/logout", async (HttpContext ctx) =>
+app.MapPost("/admin/logout", async (HttpContext ctx, IAntiforgery antiforgery) =>
 {
+    try
+    {
+        await antiforgery.ValidateRequestAsync(ctx);
+    }
+    catch (AntiforgeryValidationException)
+    {
+        return Results.BadRequest();
+    }
+
     await ctx.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
     return Results.Redirect("/");
-});
+}).RequireAuthorization();
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>();
