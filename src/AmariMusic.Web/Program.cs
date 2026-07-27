@@ -50,13 +50,20 @@ builder.Services.AddScoped<EmailService>();
 // IP can't exhaust the shared bucket and lock out every other client.
 builder.Services.AddRateLimiter(options =>
     options.AddPolicy("login", httpContext =>
-        RateLimitPartition.GetFixedWindowLimiter(
-            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+    {
+        // A null RemoteIpAddress shouldn't happen under normal IIS/Kestrel TCP
+        // hosting, but if it ever does, give each such request its own
+        // one-off partition instead of bucketing them all under a shared key
+        // (which would recreate the original shared-bucket lockout).
+        var partitionKey = httpContext.Connection.RemoteIpAddress?.ToString() ?? Guid.NewGuid().ToString();
+        return RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey,
             factory: _ => new FixedWindowRateLimiterOptions
             {
                 PermitLimit = 5,
                 Window = TimeSpan.FromMinutes(15)
-            })));
+            });
+    }));
 
 // Warn if email not configured
 if (string.IsNullOrWhiteSpace(builder.Configuration["Email:SmtpHost"]))
