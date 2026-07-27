@@ -59,12 +59,13 @@ builder.Services.AddRateLimiter(options =>
 });
 
 // A null RemoteIpAddress shouldn't happen under normal IIS/Kestrel TCP
-// hosting, but if it ever does, give each such request its own one-off
-// partition instead of bucketing them all under a shared key (which would
-// recreate the original shared-bucket lockout).
+// hosting, but if it does (e.g. a misconfigured reverse proxy), fall back to
+// a single shared "unknown" bucket so all such requests are throttled
+// together. A fresh GUID per request would give each one its own unlimited
+// bucket — defeating rate limiting entirely and leaking memory unboundedly.
 static RateLimitPartition<string> PerIpFixedWindow(HttpContext httpContext, int permitLimit, TimeSpan window)
 {
-    var partitionKey = httpContext.Connection.RemoteIpAddress?.ToString() ?? Guid.NewGuid().ToString();
+    var partitionKey = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
     return RateLimitPartition.GetFixedWindowLimiter(
         partitionKey,
         factory: _ => new FixedWindowRateLimiterOptions
