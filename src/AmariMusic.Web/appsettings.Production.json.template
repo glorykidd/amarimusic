@@ -1,14 +1,4 @@
 {
-  "Logging": {
-    "LogLevel": {
-      "Default": "Information",
-      "Microsoft.AspNetCore": "Warning"
-    }
-  },
-  "AllowedHosts": "*",
-  "ConnectionStrings": {
-    "ContactDb": "Data Source=data/contact.db"
-  },
   "AdminAuth": {
     "Username": "",
     "PasswordHash": ""
